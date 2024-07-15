@@ -19,17 +19,7 @@
     (progn
       (server-start)))
 
-(add-to-list 'load-path "~/.emacs.d/_lisp")
-
-;;(semantic-mode 1)
-;;(global-ede-mode 1)
-
-;; (require 'color-theme)
-;; (eval-after-load "color-theme"
-;;   '(progn
-;;      (color-theme-initialize)
-;;      (color-theme-gnome2)
-;;      ))
+(add-to-list 'load-path "~/.emacs.d/lisp")
 
 (autoload 'm68k-mode "m68k-mode" "Major mode for editing m68k code." nil t)
 ;;(setq auto-mode-alist (append (list (cons "\\.s$" 'm68k-mode)
@@ -78,19 +68,6 @@
 ;;     (global-auto-complete-mode t)
 ;;     ))
 
-(use-package company
-   :ensure t
-   :init
-   (add-hook 'after-init-hook 'global-company-mode)
-   )
-
-;(add-to-list 'company-backends 'company-c-headers)
-
-;(eval-after-load 'company
-;  '(add-to-list 'company-backends 'company-irony 'company-c-headers))
-
-;(setq company-backends (delete 'company-semantic company-backends))
-
 (use-package yasnippet
    :ensure t
    :init
@@ -98,6 +75,17 @@
 
 (use-package yasnippet-snippets         ; Collection of snippets
   :ensure t)
+
+(use-package company
+  :ensure t
+  :config
+  (setq company-idle-delay 0.0)
+  (setq company-minimum-prefix-length 1)
+  :init
+  (add-hook 'after-init-hook 'global-company-mode)
+  :after
+  (add-to-list 'company-backends 'company-yasnippet)
+  )
 
 (use-package ido
   :ensure t
@@ -158,11 +146,13 @@
 	  (c++-mode . lsp)
           (ng2-mode . lsp)
           (js2-mode . lsp)
-          
+          (typescript-mode . lsp)
           ;; if you want which-key integration
           (lsp-mode . lsp-enable-which-key-integration))
    :config
    :commands lsp)
+
+;;(with-eval-after-load 'typescript-mode (add-hook 'typescript-mode-hook #'lsp))
 
 (use-package lsp-ui
   :ensure t
@@ -172,8 +162,6 @@
   :ensure t
   :commands
   lsp-treemacs-errors-list)
-
-(with-eval-after-load 'typescript-mode (add-hook 'typescript-mode-hook #'lsp))
 
 (use-package dap-mode
   :ensure t
@@ -186,8 +174,11 @@
 
 (use-package projectile
   :ensure t
-  :config
-  (projectile-mode 1))
+  :init
+  (projectile-mode 1)
+  :bind (:map projectile-mode-map
+              ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map)))
 
 (use-package org
   :mode (("\\.org$" . org-mode))
@@ -372,30 +363,34 @@ If buffer-or-name is nil return current buffer's mode."
 
 (add-hook 'c-mode-common-hook
           (lambda ()
-             (ggtags-mode 1)
-             (delete-selection-mode t)
+            (linum-mode)
+            (ggtags-mode 1)
+            (delete-selection-mode t)
 
-             (setq tab-width 2)
-             (setq display-fill-column-indicator t)
-             (setq c-max-one-liner-length 100)
-             (setq case-fold-search t)
+            (setq tab-width 2)
+            (setq display-fill-column-indicator t)
+            (setq c-max-one-liner-length 100)
+            (setq case-fold-search t)
+
+            ;; * LSP *
+            (setq lsp-diagnostics-provider :none)
+            (setq lsp-headerline-breadcrumb-enable nil)
+            ;;(setq lsp-completion-enable t)
              
-             (setq lsp-diagnostics-provider :none)
-             (setq lsp-completion-enable t)
-
-             ;; code line analyze result will be shown only in modeline 
-             (setq lsp-ui-sideline-enable nil)
-             (setq lsp-modeline-diagnostics-enable t)
-
-             (setq flycheck-select-checker "c/c++-cppcheck")
-             (flycheck-mode)
-             ))
+            ;; code line analyze result will be shown only in modeline 
+            (setq lsp-ui-sideline-enable nil)
+            (setq lsp-modeline-diagnostics-enable t)
+            
+            (setq flycheck-select-checker "c/c++-cppcheck")
+            (flycheck-mode)
+            ))
 
 (add-hook 'asm-mode-hook
           (lambda ()
             (linum-mode)
-            (company-mode 0)
+            (ggtags-mode 1)
             (delete-selection-mode t)
+            (company-mode 0)
 
             (setq tab-width 8)
             (setq indent-tabs-mode t)
@@ -424,12 +419,16 @@ If buffer-or-name is nil return current buffer's mode."
                         (defun-open . 0)
                         (defun-close . 0)
                         (defun-block-intro . +)
-                        
+
+                        (statement . 0)
                         (substatement-open . 0)
                         (block-close . 0)
                         
                         (inline-open . 0)
                         (inline-close . 0)
+
+                        (innamespace . 0)
+                        (caselabel . 0)
                         ))
     (c-block-comment-prefix . ""))
   "C/C++ Programming Style.")
@@ -456,13 +455,13 @@ If buffer-or-name is nil return current buffer's mode."
 (defvar bmk nil "")
 (defvar project-sln nil "")
 
-(defun ami-projects()
-  "amiga projects"
+(defun projects()
+  "Projects"
   (interactive)
   ;;(setenv "PATH" (concat "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\Common7\\IDE;" (getenv "PATH")))
-  (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
-  
-  (setq project "~/projects/ami/")
+  ;;(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
+
+  (setq project "~/projects")
   (setq src (concat src project))
              
   (setq vc-handled-backends nil) ;; disable git 
@@ -481,11 +480,25 @@ If buffer-or-name is nil return current buffer's mode."
   (server-force-stop)
 )
 
-(global-set-key (kbd "<f5>") 'ami-projects)
-(global-set-key (kbd "<f7>") 'treemacs)
-(global-set-key (kbd "<f8>") 'whitespace-mode)
-(global-set-key (kbd "<f9>") 'ff-find-related-file)
-(global-set-key (kbd "<C-f9>") 'revert-buffer)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+
+            (global-set-key (kbd "<f1>") 'projectile-compile-project)
+            (global-set-key (kbd "<f2>") 'projectile-run-project)
+            
+            (global-set-key (kbd "<f7>") 'treemacs)
+            (global-set-key (kbd "<f8>") 'whitespace-mode)
+            (global-set-key (kbd "<f9>") 'ff-find-related-file)
+            (global-set-key (kbd "<C-f9>") 'revert-buffer)
+            
+            (define-key projectile-mode-map [?\s-d] 'projectile-find-dir)
+            (define-key projectile-mode-map [?\s-p] 'projectile-switch-project)
+            (define-key projectile-mode-map [?\s-f] 'projectile-find-file)
+            (define-key projectile-mode-map [?\s-g] 'projectile-grep)
+            
+            (projects)
+            (treemacs)
+            ))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -493,11 +506,14 @@ If buffer-or-name is nil return current buffer's mode."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(tango-dark))
+ '(gdb-many-windows t)
  '(indent-tabs-mode nil)
+ '(inhibit-startup-screen t)
  '(make-backup-files nil)
  '(package-check-signature nil)
  '(package-selected-packages
    '(xref gnu-elpa-keyring-update dap-mode dap-chrome pretty-speedbar sr-speedbar multi-term lsp-treemacs lsp-ui org-plus-contrib js2-mode lsp-mode ng2-mode company-irony-c-headers yasnippet-snippets yasnippet company-irony modern-cpp-font-lock company-jedi company magit projectile web-mode s php-mode json-mode iedit ggtags color-theme))
+ '(projectile-auto-discover nil)
  '(show-paren-mode t)
  '(speedbar-show-unknown-files t)
  '(speedbar-update-flag nil)
