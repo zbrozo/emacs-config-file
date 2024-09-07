@@ -21,16 +21,6 @@
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
 
-(autoload 'm68k-mode "m68k-mode" "Major mode for editing m68k code." nil t)
-;;(setq auto-mode-alist (append (list (cons "\\.s$" 'm68k-mode)
-;;                                     (cons "\\.asm$" 'm68k-mode))
-;;                              auto-mode-alist))
-
-(setq m68k-indent-level       8
-      m68k-indent-level-2     8
-      m68k-auto-indent        nil
-      m68k-toggle-completions nil)
-
 (use-package modern-cpp-font-lock
   :ensure t)
 
@@ -83,8 +73,8 @@
   (setq company-minimum-prefix-length 1)
   :init
   (add-hook 'after-init-hook 'global-company-mode)
-  :after
-  (add-to-list 'company-backends 'company-yasnippet)
+  ;:after
+  ;(add-to-list 'company-backends 'company-yasnippet)
   )
 
 (use-package ido
@@ -363,9 +353,9 @@ If buffer-or-name is nil return current buffer's mode."
 
 (add-hook 'c-mode-common-hook
           (lambda ()
-            (linum-mode)
             (ggtags-mode 1)
             (delete-selection-mode t)
+            (display-line-numbers-mode)
 
             (setq tab-width 2)
             (setq display-fill-column-indicator t)
@@ -381,15 +371,15 @@ If buffer-or-name is nil return current buffer's mode."
             (setq lsp-ui-sideline-enable nil)
             (setq lsp-modeline-diagnostics-enable t)
             
-            (setq flycheck-select-checker "c/c++-cppcheck")
+            ;;(setq flycheck-select-checker "c/c++-cppcheck")
             (flycheck-mode)
             ))
 
 (add-hook 'asm-mode-hook
           (lambda ()
-            (linum-mode)
             (ggtags-mode 1)
             (delete-selection-mode t)
+            (display-line-numbers-mode)
             (company-mode 0)
 
             (setq tab-width 8)
@@ -398,6 +388,29 @@ If buffer-or-name is nil return current buffer's mode."
             (setq display-fill-column-indicator t)
 	    (setq display-fill-column-indicator-column 79)
             (setq case-fold-search t)
+            
+            ;; you can use `comment-dwim' (M-;) for this kind of behaviour anyway
+            ;(local-unset-key (vector asm-comment-char))
+            ))
+
+(add-hook 'm68k-mode-hook
+          (lambda ()
+            (ggtags-mode 1)
+            (delete-selection-mode t)
+            (display-line-numbers-mode)
+            (company-mode 0)
+
+            (setq tab-width 8)
+            (setq indent-tabs-mode t)
+            (setq tab-always-indent nil)
+            (setq display-fill-column-indicator t)
+	    (setq display-fill-column-indicator-column 79)
+            (setq case-fold-search t)
+
+            (setq m68k-indent-level       8
+                  m68k-indent-level-2     8
+                  m68k-auto-indent        nil
+                  m68k-toggle-completions nil)
             
             ;; you can use `comment-dwim' (M-;) for this kind of behaviour anyway
             ;(local-unset-key (vector asm-comment-char))
@@ -428,7 +441,7 @@ If buffer-or-name is nil return current buffer's mode."
                         (inline-close . 0)
 
                         (innamespace . 0)
-                        (caselabel . 0)
+                        (case-label . 0)
                         ))
     (c-block-comment-prefix . ""))
   "C/C++ Programming Style.")
@@ -471,7 +484,7 @@ If buffer-or-name is nil return current buffer's mode."
 
   (lsp-treemacs-sync-mode 1)
   
-  (setq bmk (concat project "\\emacs.bmk"))
+  (setq bmk (concat project "/emacs.bmk"))
   (if (file-exists-p bmk)
       (bookmark-load bmk))
 
@@ -498,6 +511,12 @@ If buffer-or-name is nil return current buffer's mode."
             
             (projects)
             (treemacs)
+
+            (autoload 'm68k-mode "m68k-mode" "Major mode for editing m68k code." nil t)
+            (setq auto-mode-alist (append (list (cons "\\.s$" 'm68k-mode)
+                                                (cons "\\.asm$" 'm68k-mode))
+                                          auto-mode-alist))
+            
             ))
 
 (custom-set-variables
@@ -506,13 +525,15 @@ If buffer-or-name is nil return current buffer's mode."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(tango-dark))
+ '(flycheck-clang-language-standard "c++17")
+ '(flycheck-gcc-language-standard "c++17")
  '(gdb-many-windows t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
  '(make-backup-files nil)
  '(package-check-signature nil)
  '(package-selected-packages
-   '(xref gnu-elpa-keyring-update dap-mode dap-chrome pretty-speedbar sr-speedbar multi-term lsp-treemacs lsp-ui org-plus-contrib js2-mode lsp-mode ng2-mode company-irony-c-headers yasnippet-snippets yasnippet company-irony modern-cpp-font-lock company-jedi company magit projectile web-mode s php-mode json-mode iedit ggtags color-theme))
+   '(cmake-mode yasnippet-snippets xref which-key web-mode use-package try treemacs-tab-bar treemacs-persp treemacs-icons-dired sr-speedbar projectile pretty-speedbar ng2-mode multi-term modern-cpp-font-lock lsp-ui js2-mode gnu-elpa-keyring-update ggtags geben flycheck dap-mode company))
  '(projectile-auto-discover nil)
  '(show-paren-mode t)
  '(speedbar-show-unknown-files t)
