@@ -1,5 +1,21 @@
 ;;; emacs --- customization file
 
+;;; in case when gpg key is expired:
+;;; first run emacs without .emacs file and:
+;;; (setq package-check-signature nil) 
+;;; `M-x package-refresh-content` and `M-x install-package gnu-elpa-keyring-update`
+;;; then restart
+
+;;; if gpg key is not found in emacs:
+;;; https://metaredux.com/posts/2019/12/09/dealing-with-expired-elpa-gpg-keys.html
+;;; (setq package-gnupghome-dir "~/.emacs.d/elpa/gnupg")
+;;; and copy gnupg directory to windows home dir
+
+;(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+
+(setq package-check-signature 'allow-unsigned)
+(setq package-gnupghome-dir "~/.emacs.d/elpa/gnupg")
+
 ;;; Emacs customization file
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -11,6 +27,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package gnu-elpa-keyring-update :ensure t)
 (use-package try :ensure t)
 (use-package which-key :ensure t :config (which-key-mode))
 
@@ -19,7 +36,8 @@
     (progn
       (server-start)))
 
-(add-to-list 'load-path "~/.emacs.d/lisp")
+;;;https://github.com/themkat/emacs-m68k
+(add-to-list 'load-path "~/emacs/emacs-m68k")
 
 (use-package modern-cpp-font-lock
   :ensure t)
@@ -69,7 +87,8 @@
 (use-package company
   :ensure t
   :config
-  (setq company-idle-delay 0.0)
+  (setq company-show-numbers t)
+  (setq company-idle-delay 0.5)
   (setq company-minimum-prefix-length 1)
   :init
   (add-hook 'after-init-hook 'global-company-mode)
@@ -496,6 +515,9 @@ If buffer-or-name is nil return current buffer's mode."
 (add-hook 'emacs-startup-hook
           (lambda ()
 
+
+            (setq visible-bell 1)
+            
             (global-set-key (kbd "<f1>") 'projectile-compile-project)
             (global-set-key (kbd "<f2>") 'projectile-run-project)
             
@@ -519,6 +541,9 @@ If buffer-or-name is nil return current buffer's mode."
             
             ))
 
+;;; minimal custom-set-variables after gnu-elpa-keyring-update was installed:
+;;; (custom-set-variables '(package-selected-packages '(gnu-elpa-keyring-update)))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -530,10 +555,9 @@ If buffer-or-name is nil return current buffer's mode."
  '(gdb-many-windows t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
+ '(lsp-clients-clangd-args '("--header-insertion-decorators=0" "--log=verbose"))
  '(make-backup-files nil)
- '(package-check-signature nil)
- '(package-selected-packages
-   '(cmake-mode yasnippet-snippets xref which-key web-mode use-package try treemacs-tab-bar treemacs-persp treemacs-icons-dired sr-speedbar projectile pretty-speedbar ng2-mode multi-term modern-cpp-font-lock lsp-ui js2-mode gnu-elpa-keyring-update ggtags geben flycheck dap-mode company))
+ '(package-selected-packages '(gnu-elpa-keyring-update))
  '(projectile-auto-discover nil)
  '(show-paren-mode t)
  '(speedbar-show-unknown-files t)
@@ -544,7 +568,9 @@ If buffer-or-name is nil return current buffer's mode."
  '(sr-speedbar-right-side nil)
  '(tool-bar-mode nil)
  '(truncate-lines t)
- '(warning-suppress-types '((lsp-mode))))
+ '(warning-suppress-log-types '((comp)))
+ '(warning-suppress-types '((lsp-mode)))
+ )
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
