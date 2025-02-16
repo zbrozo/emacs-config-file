@@ -1,3 +1,4 @@
+
 ;;; emacs --- customization file
 
 ;;; in case when gpg key is expired:
@@ -36,7 +37,8 @@
     (progn
       (server-start)))
 
-;;;https://github.com/themkat/emacs-m68k
+;;; https://github.com/themkat/emacs-m68k
+;;; https://github.com/grahambates/m68k-lsp
 (add-to-list 'load-path "~/emacs/emacs-m68k")
 
 (use-package modern-cpp-font-lock
@@ -49,32 +51,6 @@
   ;;(setq flycheck-check-syntax-automatically '(save mode-enable))
   ;;(setq flycheck-idle-change-delay 4)
   )
-
-;; irony was used before LSP
-;;(use-package irony
-;;  :ensure t
-;;  :defer t
-;;  :init
-;;  (add-hook 'c++-mode-hook 'irony-mode)
-;;  (add-hook 'c-mode-hook 'irony-mode)
-;;  (add-hook 'objc-mode-hook 'irony-mode)
-;;  (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-;;  :config
-;;  (add-hook 'irony-mode-hook
-;;            (lambda()
-;;              (define-key irony-mode-map [remap completion-at-point]
-;;                'irony-completion-at-point-async)
-;;              (define-key irony-mode-map [remap complete-symbol]
-;;                'irony-completion-at-point-async))))
-
-;; auto-complete is older substitude for company
-;;(use-package auto-complete
-;;   :ensure t
-;;   :init
-;;   (progn
-;;     (ac-config-default)
-;;     (global-auto-complete-mode t)
-;;     ))
 
 (use-package yasnippet
    :ensure t
@@ -93,7 +69,7 @@
   :init
   (add-hook 'after-init-hook 'global-company-mode)
   ;:after
-  ;(add-to-list 'company-backends 'company-yasnippet)
+  ;(add-to-list 'company-backends '(company-yasnippet))
   )
 
 (use-package ido
@@ -113,8 +89,8 @@
     (buffer-file-name) " &"))
   )
 
-;; https://emacs.cafe/emacs/javascript/setup/2017/04/23/emacs-setup-javascript.html
-;; http://elpa.gnu.org/packages/js2-mode.html
+;;; https://emacs.cafe/emacs/javascript/setup/2017/04/23/emacs-setup-javascript.html
+;;; http://elpa.gnu.org/packages/js2-mode.html
 (use-package js2-mode
   :ensure t
   :config
@@ -153,9 +129,9 @@
    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
           (c-mode . lsp)
 	  (c++-mode . lsp)
-          (ng2-mode . lsp)
-          (js2-mode . lsp)
-          (typescript-mode . lsp)
+          ;(ng2-mode . lsp)
+          ;(js2-mode . lsp)
+          ;(typescript-mode . lsp)
           ;; if you want which-key integration
           (lsp-mode . lsp-enable-which-key-integration))
    :config
@@ -200,37 +176,6 @@
 (use-package multi-term
   :ensure t
   )
-
-(use-package sr-speedbar
-  :ensure t
-  )
-
-(use-package pretty-speedbar
-  :ensure t
-  :config
-  (progn
-    (setq pretty-speedbar-icon-fill "#FFFFFF") ;; Fill color for all non-folder icons.
-    (setq pretty-speedbar-icon-stroke "#DCDCDC") ;; Stroke color for all non-folder icons.
-    (setq pretty-speedbar-icon-folder-fill "#D9B3FF") ;; Fill color for all folder icons.
-    (setq pretty-speedbar-icon-folder-stroke "#CC00CC") ;; Stroke color for all folder icons.
-    (setq pretty-speedbar-about-fill "#EFEFEF") ;; Fill color for all icons placed to the right of the file name, including checks and locks.
-    (setq pretty-speedbar-about-stroke "#DCDCDC") ;; Stroke color for all icons placed to the right of the file name, including checks and locks.
-    (setq pretty-speedbar-signs-fill "#594968") ;; Fill color for plus and minus signs used on non-folder icons.
-    ;; Increase the indentation for better useability.
-    (setq speedbar-indentation-width 3)
-    ;; Add Markdown Header support
-    (speedbar-add-supported-extension ".md")
-    (setq speedbar-update-flag nil)
-    ;; Disable checkmarks
-    (setq speedbar-vc-do-check nil)
-    (add-hook 'speedbar-mode-hook (lambda()
-                                    ;; Disable word wrapping in speedbar if you always enable it globally.
-                                    (visual-line-mode 0) 
-                                    ;; Change speedbar's text size.  May need to alter the icon size if you change size.
-                                    (text-scale-adjust -1)
-                                    ))
-    ))
-
 
 (use-package treemacs
   :ensure t
@@ -384,8 +329,9 @@ If buffer-or-name is nil return current buffer's mode."
             ;; * LSP *
             (setq lsp-diagnostics-provider :none)
             (setq lsp-headerline-breadcrumb-enable nil)
-            ;;(setq lsp-completion-enable t)
-             
+            (setq lsp-enable-completion-at-point nil)
+	    (setq lsp-enable-on-type-formatting nil)
+			 
             ;; code line analyze result will be shown only in modeline 
             (setq lsp-ui-sideline-enable nil)
             (setq lsp-modeline-diagnostics-enable t)
@@ -407,9 +353,6 @@ If buffer-or-name is nil return current buffer's mode."
             (setq display-fill-column-indicator t)
 	    (setq display-fill-column-indicator-column 79)
             (setq case-fold-search t)
-            
-            ;; you can use `comment-dwim' (M-;) for this kind of behaviour anyway
-            ;(local-unset-key (vector asm-comment-char))
             ))
 
 (add-hook 'm68k-mode-hook
@@ -426,16 +369,26 @@ If buffer-or-name is nil return current buffer's mode."
 	    (setq display-fill-column-indicator-column 79)
             (setq case-fold-search t)
 
-            (setq m68k-indent-level       8
-                  m68k-indent-level-2     8
-                  m68k-auto-indent        nil
-                  m68k-toggle-completions nil)
-            
-            ;; you can use `comment-dwim' (M-;) for this kind of behaviour anyway
-            ;(local-unset-key (vector asm-comment-char))
+            ;; * LSP *
+            (setq lsp-diagnostics-provider :none)
+            (setq lsp-headerline-breadcrumb-enable nil)
+            (setq lsp-enable-completion-at-point nil)
+            (setq lsp-enable-on-type-formatting nil)
+
+            ;; code line analyze result will be shown only in modeline 
+            (setq lsp-ui-sideline-enable nil)
+            (setq lsp-modeline-diagnostics-enable t)
+
+            (add-hook 'before-save-hook '(lambda()
+                                           (when (eq major-mode 'm68k-mode)
+                                           (progn
+                                             ;; (indent-region (point-min) (point-max))
+                                             (tabify (point-min) (point-max))
+                                             (delete-trailing-whitespace)
+                                             ))))
             ))
 
-(defconst zbr-c-style
+(defconst my-c-style
   '(
     (tab-width . 2)
     (c-basic-offset . 2)
@@ -464,63 +417,42 @@ If buffer-or-name is nil return current buffer's mode."
                         ))
     (c-block-comment-prefix . ""))
   "C/C++ Programming Style.")
-(c-add-style "zbr" zbr-c-style)
-
-;; (defun vs-build (name)
-;;   "VS build configuration NAME."
-;;   (interactive)
-;;   (setq sln (replace-regexp-in-string "\\\\" "/" project-sln t t))
-;;   (setq compile-command (concat "cd \"" sln "\"" " & devenv cpp.sln /build " name ))
-;;   (compile compile-command)
-;;   )
-
-;; (defun vs-rebuild (name)
-;;   "VS rebuild configuration NAME."
-;;   (interactive)
-;;   (setq sln (replace-regexp-in-string "\\\\" "/" project-sln t t))
-;;   (setq compile-command (concat "cd \"" sln "\"" " & devenv cpp.sln /rebuild " name ))
-;;   (compile compile-command)
-;;   )
+(c-add-style "my" my-c-style)
 
 (defvar project nil "")
 (defvar src nil "")
 (defvar bmk nil "")
-(defvar project-sln nil "")
 
 (defun projects()
-  "Projects"
+  "Projects directory setup"
   (interactive)
-  ;;(setenv "PATH" (concat "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\Common7\\IDE;" (getenv "PATH")))
-  ;;(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
-
   (setq project "~/projects")
   (setq src (concat src project))
              
   (setq vc-handled-backends nil) ;; disable git 
+  (lsp-treemacs-sync-mode 1) ;; show currently opened file in treemacs
   
-  (setq company-minimum-prefix-length 1
-        company-idle-delay 0.0)
+  ;;(setq company-minimum-prefix-length 1
+  ;;      company-idle-delay 0.0)
 
-  (lsp-treemacs-sync-mode 1)
-  
+  ;; load local bookmark file if exists
   (setq bmk (concat project "/emacs.bmk"))
   (if (file-exists-p bmk)
       (bookmark-load bmk))
 
-  (setq c-default-style "zbr")
+  (setq c-default-style "my")
   (dired src)
   (server-force-stop)
 )
 
 (add-hook 'emacs-startup-hook
           (lambda ()
-
-
+            ;; turn off sounds
             (setq visible-bell 1)
             
             (global-set-key (kbd "<f1>") 'projectile-compile-project)
             (global-set-key (kbd "<f2>") 'projectile-run-project)
-            
+            (global-set-key (kbd "C-<F1>") 'find-grep)
             (global-set-key (kbd "<f7>") 'treemacs)
             (global-set-key (kbd "<f8>") 'whitespace-mode)
             (global-set-key (kbd "<f9>") 'ff-find-related-file)
@@ -534,7 +466,8 @@ If buffer-or-name is nil return current buffer's mode."
             (projects)
             (treemacs)
 
-            (autoload 'm68k-mode "m68k-mode" "Major mode for editing m68k code." nil t)
+            (require 'm68k-mode)
+            (require 'm68k-cycle-counter)
             (setq auto-mode-alist (append (list (cons "\\.s$" 'm68k-mode)
                                                 (cons "\\.asm$" 'm68k-mode))
                                           auto-mode-alist))
@@ -560,17 +493,11 @@ If buffer-or-name is nil return current buffer's mode."
  '(package-selected-packages '(gnu-elpa-keyring-update))
  '(projectile-auto-discover nil)
  '(show-paren-mode t)
- '(speedbar-show-unknown-files t)
- '(speedbar-update-flag nil)
  '(sql-product 'mysql)
- '(sr-speedbar-default-width 50)
- '(sr-speedbar-max-width 100)
- '(sr-speedbar-right-side nil)
  '(tool-bar-mode nil)
  '(truncate-lines t)
  '(warning-suppress-log-types '((comp)))
- '(warning-suppress-types '((lsp-mode)))
- )
+ '(warning-suppress-types '((lsp-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
