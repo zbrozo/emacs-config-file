@@ -1,4 +1,3 @@
-
 ;;; emacs --- customization file
 
 ;;; in case when gpg key is expired:
@@ -329,7 +328,7 @@ If buffer-or-name is nil return current buffer's mode."
             ;; * LSP *
             (setq lsp-diagnostics-provider :none)
             (setq lsp-headerline-breadcrumb-enable nil)
-            (setq lsp-enable-completion-at-point nil)
+            (setq lsp-enable-completion-at-point t)
 	    (setq lsp-enable-on-type-formatting nil)
 			 
             ;; code line analyze result will be shown only in modeline 
@@ -372,7 +371,7 @@ If buffer-or-name is nil return current buffer's mode."
             ;; * LSP *
             (setq lsp-diagnostics-provider :none)
             (setq lsp-headerline-breadcrumb-enable nil)
-            (setq lsp-enable-completion-at-point nil)
+            (setq lsp-enable-completion-at-point t)
             (setq lsp-enable-on-type-formatting nil)
 
             ;; code line analyze result will be shown only in modeline 
@@ -382,8 +381,6 @@ If buffer-or-name is nil return current buffer's mode."
             (add-hook 'before-save-hook '(lambda()
                                            (when (eq major-mode 'm68k-mode)
                                            (progn
-                                             ;; (indent-region (point-min) (point-max))
-                                             (tabify (point-min) (point-max))
                                              (delete-trailing-whitespace)
                                              ))))
             ))
