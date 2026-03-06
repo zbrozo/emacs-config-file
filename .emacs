@@ -36,6 +36,9 @@
     (progn
       (server-start)))
 
+;;(add-to-list 'exec-path "/usr/local/bin")
+;;(setenv "PATH" (concat "/usr/local/bin:" (getenv "PATH")))
+
 ;;; https://github.com/themkat/emacs-m68k
 ;;; https://github.com/grahambates/m68k-lsp
 (add-to-list 'load-path "~/emacs/emacs-m68k")
@@ -352,6 +355,10 @@ If buffer-or-name is nil return current buffer's mode."
             (setq display-fill-column-indicator t)
 	    (setq display-fill-column-indicator-column 79)
             (setq case-fold-search t)
+
+            (setq dap-auto-configure-mode t)
+            (dap-ui-mode)
+            (dap-mode)
             ))
 
 (add-hook 'm68k-mode-hook
@@ -368,10 +375,13 @@ If buffer-or-name is nil return current buffer's mode."
 	    (setq display-fill-column-indicator-column 79)
             (setq case-fold-search t)
 
+            (local-set-key  (kbd "C-c C-c") 'comment-region)
+            (local-set-key  (kbd "C-u C-c") 'uncomment-region)
+            
             ;; * LSP *
             (setq lsp-diagnostics-provider :none)
             (setq lsp-headerline-breadcrumb-enable nil)
-            (setq lsp-enable-completion-at-point t)
+            ;;(setq lsp-enable-completion-at-point nil)
             (setq lsp-enable-on-type-formatting nil)
 
             ;; code line analyze result will be shown only in modeline 
@@ -381,6 +391,8 @@ If buffer-or-name is nil return current buffer's mode."
             (add-hook 'before-save-hook '(lambda()
                                            (when (eq major-mode 'm68k-mode)
                                            (progn
+                                             ;; (indent-region (point-min) (point-max))
+                                             ;; (tabify (point-min) (point-max))
                                              (delete-trailing-whitespace)
                                              ))))
             ))
@@ -429,9 +441,6 @@ If buffer-or-name is nil return current buffer's mode."
   (setq vc-handled-backends nil) ;; disable git 
   (lsp-treemacs-sync-mode 1) ;; show currently opened file in treemacs
   
-  ;;(setq company-minimum-prefix-length 1
-  ;;      company-idle-delay 0.0)
-
   ;; load local bookmark file if exists
   (setq bmk (concat project "/emacs.bmk"))
   (if (file-exists-p bmk)
@@ -442,18 +451,59 @@ If buffer-or-name is nil return current buffer's mode."
   (server-force-stop)
 )
 
+(defun ami-project(name)
+  ""
+  (interactive)
+  
+  (setq project (file-name-concat "~/projects/ami" name))
+  (setq src (file-name-concat project "src"))
+             
+  (setq vc-handled-backends nil) ;; disable git 
+  (lsp-treemacs-sync-mode 1) ;; show currently opened file in treemacs
+
+  (dap-register-debug-template
+   "a"
+   (list :type "asm68k"
+         :request "launch"
+         :program (file-name-concat project "uae/dh0/demo.exe")
+         :dap-server-path (list "/home/tomek/projects/uae-dap/cli.js")
+         :serverName "localhost"
+         :serverPort "2345"
+         :emulatorArgs ["--chip_memory=1024"
+                        "--amiga_model=A500"
+                        "--automatic_input_grab=0"
+                        "--floppy_drive_0_sounds=off"
+                        "--hide_hud=1"
+                        "--window_resizable=1"
+                        "--kickstart-file=/home/tomek/amiga/roms/Kick13(34.5).rom"]))
+  
+  ;; load local bookmark file if exists
+  (setq bmk (file-name-concat project "emacs.bmk"))
+  (if (file-exists-p bmk)
+      (bookmark-load bmk))
+
+  (setq c-default-style "my")
+  (find-file (file-name-concat project "main.S"))
+  ;;(dired src)
+  (server-force-stop)
+)
+
+(defun existenz()
+  ""
+  (interactive)
+  (ami-project "a500-existenz-demo"))
+
+(defun humancage()
+  ""
+  (interactive)
+  (ami-project "a500-scoopex"))
+
 (add-hook 'emacs-startup-hook
           (lambda ()
             ;; turn off sounds
             (setq visible-bell 1)
-            
-            (global-set-key (kbd "<f1>") 'projectile-compile-project)
-            (global-set-key (kbd "<f2>") 'projectile-run-project)
-            (global-set-key (kbd "C-<F1>") 'find-grep)
-            (global-set-key (kbd "<f7>") 'treemacs)
-            (global-set-key (kbd "<f8>") 'whitespace-mode)
-            (global-set-key (kbd "<f9>") 'ff-find-related-file)
-            (global-set-key (kbd "<C-f9>") 'revert-buffer)
+
+            ;;(setq lsp-disabled-clients '(semgrep-ls))
             
             (define-key projectile-mode-map [?\s-d] 'projectile-find-dir)
             (define-key projectile-mode-map [?\s-p] 'projectile-switch-project)
@@ -464,10 +514,27 @@ If buffer-or-name is nil return current buffer's mode."
             (treemacs)
 
             (require 'm68k-mode)
+            (require 'm68k-lsp)
             (require 'm68k-cycle-counter)
-            (setq auto-mode-alist (append (list (cons "\\.s$" 'm68k-mode)
+            (require 'm68k-dap)
+            
+            (setq auto-mode-alist (append (list (cons "\\.i$" 'm68k-mode)
+                                                (cons "\\.s$" 'm68k-mode)
+                                                (cons "\\.S$" 'm68k-mode)
                                                 (cons "\\.asm$" 'm68k-mode))
                                           auto-mode-alist))
+            
+            (global-set-key (kbd "<f1>") 'projectile-compile-project)
+            (global-set-key (kbd "<f2>") 'projectile-run-project)
+
+            (global-set-key (kbd "<f7>") 'treemacs)
+            (global-set-key (kbd "<f8>") 'whitespace-mode)
+            (global-set-key (kbd "<f9>") 'ff-find-related-file)
+            (global-set-key (kbd "<f10>") 'find-file-at-point)
+
+            (global-set-key (kbd "<C-f1>") 'my-find-string)
+            (global-set-key (kbd "<C-f4>") 'm68k-cycle-counter-mode)
+            (global-set-key (kbd "<C-f9>") 'revert-buffer)
             
             ))
 
@@ -480,12 +547,14 @@ If buffer-or-name is nil return current buffer's mode."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(tango-dark))
+ '(dap-print-io t)
  '(flycheck-clang-language-standard "c++17")
  '(flycheck-gcc-language-standard "c++17")
  '(gdb-many-windows t)
  '(indent-tabs-mode nil)
  '(inhibit-startup-screen t)
- '(lsp-clients-clangd-args '("--header-insertion-decorators=0" "--log=verbose"))
+ '(lsp-clients-clangd-args
+   '("--header-insertion-decorators=0" "--log=verbose" "--compile-commands-dir=build" "--background-index"))
  '(make-backup-files nil)
  '(package-selected-packages '(gnu-elpa-keyring-update))
  '(projectile-auto-discover nil)
